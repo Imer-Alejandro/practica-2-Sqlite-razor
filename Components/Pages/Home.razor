@@ -1,0 +1,226 @@
+﻿@page "/"
+@inject IPlataformaService plataformaService
+
+<PageTitle>Plataformas</PageTitle>
+
+<style>
+    /* Estilos retro como antes */
+    body {
+        background-color: #1a1a1a;
+        color: #33ff33;
+        font-family: 'Press Start 2P', cursive; /* Fuente de consola retro */
+    }
+
+    .header {
+        text-align: center;
+        margin: 20px;
+        padding: 10px;
+        border-bottom: 2px solid #33ff33;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .retro-table {
+        width: 100%;
+        margin: 20px auto;
+        border-collapse: collapse;
+    }
+
+        .retro-table th, .retro-table td {
+            border: 2px solid #33ff33;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .retro-table th {
+            background-color: #333;
+        }
+
+        .retro-table td {
+            background-color: #000;
+        }
+
+    button {
+        background-color: #333;
+        color: #33ff33;
+        border: 2px solid #33ff33;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+        button:hover {
+            background-color: #444;
+        }
+
+    .btn-registrar, .btn-save, .btn-cancel, .btn-editar, .btn-eliminar {
+        display: inline-block;
+        margin-right: 10px;
+        margin-top: 5px;
+    }
+
+    .form-add, .form-edit {
+        margin: 20px auto;
+        padding: 10px;
+        border: 2px solid #33ff33;
+        width: 50%;
+    }
+
+    input[type="text"], input[type="checkbox"] {
+        margin-bottom: 10px;
+        padding: 5px;
+        border: 2px solid #33ff33;
+        background-color: #000;
+        color: #33ff33;
+    }
+
+    /* Estilos para el menú de navegación */
+    .nav-menu {
+        text-align: center;
+        margin: 20px;
+    }
+
+        .nav-menu a {
+            color: #33ff33;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+
+            .nav-menu a:hover {
+                text-decoration: underline;
+            }
+</style>
+
+<!-- Menú de navegación -->
+<div class="nav-menu">
+    <a href="/">Inicio</a>
+    <a href="/VideoGame">Video Juegos</a>
+    <a href="/Personajes">Personajes</a>
+</div>
+
+<!-- Header retro -->
+<div class="header">
+    <h1>Plataformas</h1>
+    <button class="btn-registrar" @onclick="ToggleAddForm">Registrar Nueva Plataforma</button>
+</div>
+
+<!-- Formulario oculto para registrar una nueva plataforma -->
+@if (showAddForm)
+{
+    <div class="form-add">
+        <h2>Registrar Plataforma</h2>
+        <label>Nombre: </label>
+        <input type="text" @bind="newPlataforma.Nombre" />
+        <label>Activa: </label>
+        <input type="checkbox" @bind="newPlataforma.Activa" />
+        <button class="btn-save" @onclick="AddPlataforma">Guardar</button>
+        <button class="btn-cancel" @onclick="ToggleAddForm">Cancelar</button>
+    </div>
+}
+
+<!-- Tabla retro para listar plataformas -->
+<table class="retro-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Activa</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var plataforma in plataformas)
+        {
+            <tr>
+                <td>@plataforma.Id</td>
+                <td>@plataforma.Nombre</td>
+                <td>@(plataforma.Activa ? "Sí" : "No")</td>
+                <td>
+                    <button class="btn-editar" @onclick="() => EditPlataforma(plataforma.Id)">Editar</button>
+                    <button class="btn-eliminar" @onclick="() => DeletePlataforma(plataforma.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Formulario oculto para editar plataforma -->
+@if (showEditForm)
+{
+    <div class="form-edit">
+        <h2>Editar Plataforma</h2>
+        <label>Nombre: </label>
+        <input type="text" @bind="editPlataforma.Nombre" />
+        <label>Activa: </label>
+        <input type="checkbox" @bind="editPlataforma.Activa" />
+        <button class="btn-save" @onclick="UpdatePlataforma">Actualizar</button>
+        <button class="btn-cancel" @onclick="ToggleEditForm">Cancelar</button>
+    </div>
+}
+
+@code {
+    private List<Plataforma> plataformas = new List<Plataforma>();
+    private Plataforma newPlataforma = new Plataforma();
+    private Plataforma editPlataforma = new Plataforma();
+    private bool showAddForm = false;
+    private bool showEditForm = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPlataformas();
+    }
+
+    private async Task LoadPlataformas()
+    {
+        plataformas = (await plataformaService.GetAllPlataformasAsync()).ToList();
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private void ToggleAddForm()
+    {
+        showAddForm = !showAddForm;
+        newPlataforma = new Plataforma(); // Asegurar que el formulario esté limpio al abrirse
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private void ToggleEditForm()
+    {
+        showEditForm = !showEditForm;
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private async Task AddPlataforma()
+    {
+        if (!string.IsNullOrWhiteSpace(newPlataforma.Nombre))
+        {
+            await plataformaService.AddPlataformaAsync(newPlataforma);
+            await LoadPlataformas(); // Actualizar la lista tras añadir
+            ToggleAddForm(); // Ocultar el formulario
+        }
+    }
+
+    private async Task EditPlataforma(int id)
+    {
+        editPlataforma = await plataformaService.GetPlataformaByIdAsync(id);
+        showEditForm = true;
+        StateHasChanged(); // Mostrar el formulario de edición
+    }
+
+    private async Task UpdatePlataforma()
+    {
+        if (!string.IsNullOrWhiteSpace(editPlataforma.Nombre))
+        {
+            await plataformaService.UpdatePlataformaAsync(editPlataforma);
+            await LoadPlataformas(); // Actualizar la lista tras editar
+            ToggleEditForm(); // Ocultar el formulario de edición
+        }
+    }
+
+    private async Task DeletePlataforma(int id)
+    {
+        await plataformaService.DeletePlataformaAsync(id);
+        await LoadPlataformas(); // Actualizar la lista tras eliminar
+    }
+}

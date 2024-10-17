@@ -1,0 +1,275 @@
+﻿@page "/personajes"
+@inject IPersonajeService personajeService
+
+<PageTitle>Personajes</PageTitle>
+
+<style>
+    /* Estilos retro */
+    body {
+        background-color: #1a1a1a;
+        color: #33ff33;
+        font-family: 'Press Start 2P', cursive; /* Fuente de consola retro */
+    }
+
+    .header {
+        text-align: center;
+        margin: 20px;
+        padding: 10px;
+        border-bottom: 2px solid #33ff33;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .retro-table {
+        width: 100%;
+        margin: 20px auto;
+        border-collapse: collapse;
+    }
+
+    .retro-table th, .retro-table td {
+        border: 2px solid #33ff33;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .retro-table th {
+        background-color: #333;
+    }
+
+    .retro-table td {
+        background-color: #000;
+    }
+
+    button {
+        background-color: #333;
+        color: #33ff33;
+        border: 2px solid #33ff33;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    button:hover {
+        background-color: #444;
+    }
+
+    .btn-registrar, .btn-save, .btn-cancel, .btn-editar, .btn-eliminar {
+        display: inline-block;
+        margin-right: 10px;
+        margin-top: 5px;
+    }
+
+    .form-add, .form-edit {
+        margin: 20px auto;
+        padding: 10px;
+        border: 2px solid #33ff33;
+        width: 50%;
+    }
+
+    input[type="text"], input[type="number"] {
+        margin-bottom: 10px;
+        padding: 5px;
+        border: 2px solid #33ff33;
+        background-color: #000;
+        color: #33ff33;
+    }
+
+    /* Estilos para el menú de navegación */
+    .nav-menu {
+        text-align: center;
+        margin: 20px;
+    }
+
+    .nav-menu a {
+        color: #33ff33;
+        margin: 0 15px;
+        text-decoration: none;
+    }
+
+    .nav-menu a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<!-- Menú de navegación -->
+<div class="nav-menu">
+    <a href="/">Inicio</a>
+    <a href="/VideoGame">Video Juegos</a>
+    <a href="/Personajes">Personajes</a>
+</div>
+
+<!-- Header retro -->
+<div class="header">
+    <h1>Personajes</h1>
+    <button class="btn-registrar" @onclick="ToggleAddForm">Registrar Nuevo Personaje</button>
+</div>
+
+<!-- Formulario oculto para registrar un nuevo personaje -->
+@if (showAddForm)
+{
+    <div class="form-add">
+        <h2>Registrar Personaje</h2>
+        <label>Nombre: </label>
+        <input type="text" @bind="newPersonaje.Nombre" />
+        <label>Alias: </label>
+        <input type="text" @bind="newPersonaje.Alias" />
+        <label>Rol en Juego: </label>
+        <input type="text" @bind="newPersonaje.RolEnJuego" />
+        <label>Habilidad Especial: </label>
+        <input type="text" @bind="newPersonaje.HabilidadEspecial" />
+        <label>Arma Favorita: </label>
+        <input type="text" @bind="newPersonaje.ArmaFavorita" />
+        <label>Nivel de Poder: </label>
+        <input type="number" @bind="newPersonaje.NivelPoder" />
+        <label>Imagen URL: </label>
+        <input type="text" @bind="newPersonaje.ImagenUrl" />
+        <label>Videojuego: </label>
+        <select @bind="newPersonaje.VideojuegoId">
+            @foreach (var videojuego in videojuegos)
+            {
+                <option value="@videojuego.Id">@videojuego.Nombre</option>
+            }
+        </select>
+        <button class="btn-save" @onclick="AddPersonaje">Guardar</button>
+        <button class="btn-cancel" @onclick="ToggleAddForm">Cancelar</button>
+    </div>
+}
+
+<!-- Tabla retro para listar personajes -->
+<table class="retro-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Alias</th>
+            <th>Rol en Juego</th>
+            <th>Habilidad Especial</th>
+            <th>Arma Favorita</th>
+            <th>Nivel de Poder</th>
+            <th>Videojuego</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var personaje in personajes)
+        {
+            <tr>
+                <td>@personaje.Id</td>
+                <td>@personaje.Nombre</td>
+                <td>@personaje.Alias</td>
+                <td>@personaje.RolEnJuego</td>
+                <td>@personaje.HabilidadEspecial</td>
+                <td>@personaje.ArmaFavorita</td>
+                <td>@personaje.NivelPoder</td>
+                <td>@personaje.Videojuego?.Nombre</td>
+                <td>
+                    <button class="btn-editar" @onclick="() => EditPersonaje(personaje.Id)">Editar</button>
+                    <button class="btn-eliminar" @onclick="() => DeletePersonaje(personaje.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Formulario oculto para editar personaje -->
+@if (showEditForm)
+{
+    <div class="form-edit">
+        <h2>Editar Personaje</h2>
+        <label>Nombre: </label>
+        <input type="text" @bind="editPersonaje.Nombre" />
+        <label>Alias: </label>
+        <input type="text" @bind="editPersonaje.Alias" />
+        <label>Rol en Juego: </label>
+        <input type="text" @bind="editPersonaje.RolEnJuego" />
+        <label>Habilidad Especial: </label>
+        <input type="text" @bind="editPersonaje.HabilidadEspecial" />
+        <label>Arma Favorita: </label>
+        <input type="text" @bind="editPersonaje.ArmaFavorita" />
+        <label>Nivel de Poder: </label>
+        <input type="number" @bind="editPersonaje.NivelPoder" />
+        <label>Imagen URL: </label>
+        <input type="text" @bind="editPersonaje.ImagenUrl" />
+        <label>Videojuego: </label>
+        <select @bind="editPersonaje.VideojuegoId">
+            @foreach (var videojuego in videojuegos)
+            {
+                <option value="@videojuego.Id" selected="@(videojuego.Id == editPersonaje.VideojuegoId)">@videojuego.Nombre</option>
+            }
+        </select>
+        <button class="btn-save" @onclick="UpdatePersonaje">Actualizar</button>
+        <button class="btn-cancel" @onclick="ToggleEditForm">Cancelar</button>
+    </div>
+}
+
+@code {
+    private List<Personaje> personajes = new List<Personaje>();
+    private List<Videojuego> videojuegos = new List<Videojuego>();
+    private Personaje newPersonaje = new Personaje();
+    private Personaje editPersonaje = new Personaje();
+    private bool showAddForm = false;
+    private bool showEditForm = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPersonajes();
+        await LoadVideojuegos();
+    }
+
+    private async Task LoadPersonajes()
+    {
+        personajes = (await personajeService.GetAllPersonajesAsync()).ToList();
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private async Task LoadVideojuegos()
+    {
+        videojuegos = (await personajeService.GetAllVideojuegosAsync()).ToList(); // Método hipotético para cargar videojuegos
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private void ToggleAddForm()
+    {
+        showAddForm = !showAddForm;
+        newPersonaje = new Personaje(); // Limpiar el formulario al abrir
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private void ToggleEditForm()
+    {
+        showEditForm = !showEditForm;
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private async Task AddPersonaje()
+    {
+        if (!string.IsNullOrWhiteSpace(newPersonaje.Nombre))
+        {
+            await personajeService.AddPersonajeAsync(newPersonaje);
+            await LoadPersonajes(); // Actualizar la lista tras añadir
+            ToggleAddForm(); // Ocultar el formulario
+        }
+    }
+
+    private async Task EditPersonaje(int id)
+    {
+        editPersonaje = await personajeService.GetPersonajeByIdAsync(id);
+        showEditForm = true;
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private async Task UpdatePersonaje()
+    {
+        await personajeService.UpdatePersonajeAsync(editPersonaje);
+        await LoadPersonajes(); // Actualizar la lista tras la edición
+        ToggleEditForm(); // Ocultar el formulario
+    }
+
+    private async Task DeletePersonaje(int id)
+    {
+        await personajeService.DeletePersonajeAsync(id);
+        await LoadPersonajes(); // Actualizar la lista tras eliminar
+    }
+}

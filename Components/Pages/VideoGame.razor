@@ -1,0 +1,274 @@
+﻿@page "/VideoGame"
+@inject IVideojuegoService videojuegoService
+@inject IPlataformaService plataformaService
+
+<PageTitle>Videojuegos</PageTitle>
+
+<style>
+    /* Estilos retro */
+    body {
+        background-color: #1a1a1a;
+        color: #33ff33;
+        font-family: 'Press Start 2P', cursive;
+    }
+
+    .header {
+        text-align: center;
+        margin: 20px;
+        padding: 10px;
+        border-bottom: 2px solid #33ff33;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .retro-table {
+        width: 100%;
+        margin: 20px auto;
+        border-collapse: collapse;
+    }
+
+    .retro-table th, .retro-table td {
+        border: 2px solid #33ff33;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .retro-table th {
+        background-color: #333;
+    }
+
+    .retro-table td {
+        background-color: #000;
+    }
+
+    button {
+        background-color: #333;
+        color: #33ff33;
+        border: 2px solid #33ff33;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    button:hover {
+        background-color: #444;
+    }
+
+    .btn-registrar, .btn-save, .btn-cancel, .btn-editar, .btn-eliminar {
+        display: inline-block;
+        margin-right: 10px;
+        margin-top: 5px;
+    }
+
+    .form-add, .form-edit {
+        margin: 20px auto;
+        padding: 10px;
+        border: 2px solid #33ff33;
+        width: 50%;
+    }
+
+    input[type="text"], input[type="date"], input[type="checkbox"] {
+        margin-bottom: 10px;
+        padding: 5px;
+        border: 2px solid #33ff33;
+        background-color: #000;
+        color: #33ff33;
+    }
+
+    .nav-menu {
+        text-align: center;
+        margin: 20px;
+    }
+
+    .nav-menu a {
+        color: #33ff33;
+        margin: 0 15px;
+        text-decoration: none;
+    }
+
+    .nav-menu a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<!-- Menú de navegación -->
+<div class="nav-menu">
+    <a href="/">Inicio</a>
+    <a href="/VideoGame">Video Juegos</a>
+    <a href="/Personajes">Personajes</a>
+</div>
+
+
+<!-- Header retro -->
+<div class="header">
+    <h1>Videojuegos</h1>
+    <button class="btn-registrar" @onclick="ToggleAddForm">Registrar Nuevo Videojuego</button>
+</div>
+
+<!-- Formulario oculto para registrar un nuevo videojuego -->
+@if (showAddForm){
+    <div class="form-add">
+        <h2>Registrar Videojuego</h2>
+        <label>Nombre: </label>
+        <input type="text" @bind="newVideojuego.Nombre" />
+        <label>Desarrollador: </label>
+        <input type="text" @bind="newVideojuego.Desarrollador" />
+        <label>Género: </label>
+        <input type="text" @bind="newVideojuego.Genero" />
+        <label>Fecha de Lanzamiento: </label>
+        <input type="date" @bind="newVideojuego.FechaLanzamiento" />
+        <label>Imagen Portada URL: </label>
+        <input type="text" @bind="newVideojuego.ImagenPortadaUrl" />
+        <label>Descripción: </label>
+        <input type="text" @bind="newVideojuego.Descripcion" />
+        <label>Plataforma: </label>
+        <select @bind="newVideojuego.PlataformaId">
+            @foreach (var plataforma in plataformas)
+            {
+                <option value="@plataforma.Id">@plataforma.Nombre</option>
+            }
+        </select>
+        <button class="btn-save" @onclick="AddVideojuego">Guardar</button>
+        <button class="btn-cancel" @onclick="ToggleAddForm">Cancelar</button>
+    </div>
+}
+   
+
+<!-- Tabla retro para listar videojuegos -->
+<table class="retro-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Desarrollador</th>
+            <th>Género</th>
+            <th>Plataforma</th>
+            <th>Fecha de Lanzamiento</th>
+            <th>Imagen</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var videojuego in videojuegos)
+        {
+            <tr>
+                <td>@videojuego.Id</td>
+                <td>@videojuego.Nombre</td>
+                <td>@videojuego.Desarrollador</td>
+                <td>@videojuego.Genero</td>
+                <td>@videojuego.Plataforma</td>
+                <td>@videojuego.FechaLanzamiento.ToShortDateString()</td>
+                <td>
+                    <img src="@videojuego.ImagenPortadaUrl" width="100px" height="100px" alt="Alternate Text" />
+                </td>
+                <td>
+                    <button class="btn-editar" @onclick="() => EditVideojuego(videojuego.Id)">Editar</button>
+                    <button class="btn-eliminar" @onclick="() => DeleteVideojuego(videojuego.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Formulario oculto para editar videojuego -->
+@if (showEditForm)
+{
+    <div class="form-edit">
+        <h2>Editar Videojuego</h2>
+        <label>Nombre: </label>
+        <input type="text" @bind="editVideojuego.Nombre" />
+        <label>Desarrollador: </label>
+        <input type="text" @bind="editVideojuego.Desarrollador" />
+        <label>Género: </label>
+        <input type="text" @bind="editVideojuego.Genero" />
+        <label>Fecha de Lanzamiento: </label>
+        <input type="date" @bind="editVideojuego.FechaLanzamiento" />
+        <label>Imagen Portada URL: </label>
+        <input type="text" @bind="editVideojuego.ImagenPortadaUrl" />
+        <label>Descripción: </label>
+        <input type="text" @bind="editVideojuego.Descripcion" />
+        <label>Plataforma: </label>
+        <select @bind="editVideojuego.PlataformaId">
+            @foreach (var plataforma in plataformas)
+            {
+                <option value="@plataforma.Id">@plataforma.Nombre</option>
+            }
+        </select>
+        <button class="btn-save" @onclick="UpdateVideojuego">Actualizar</button>
+        <button class="btn-cancel" @onclick="ToggleEditForm">Cancelar</button>
+    </div>
+}
+
+@code {
+    private List<Videojuego> videojuegos = new List<Videojuego>();
+    private List<Plataforma> plataformas = new List<Plataforma>();
+    private Videojuego newVideojuego = new Videojuego();
+    private Videojuego editVideojuego = new Videojuego();
+    private bool showAddForm = false;
+    private bool showEditForm = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVideojuegos();
+        await LoadPlataformas();
+    }
+
+    private async Task LoadVideojuegos()
+    {
+        videojuegos = (await videojuegoService.GetAllVideojuegosAsync()).ToList();
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private async Task LoadPlataformas()
+    {
+        plataformas = (await plataformaService.GetAllPlataformasAsync()).ToList();
+    }
+
+    private void ToggleAddForm()
+    {
+        showAddForm = !showAddForm;
+        newVideojuego = new Videojuego(); // Asegurar que el formulario esté limpio al abrirse
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private void ToggleEditForm()
+    {
+        showEditForm = !showEditForm;
+        StateHasChanged(); // Forzar la actualización de la UI
+    }
+
+    private async Task AddVideojuego()
+    {
+        if (!string.IsNullOrWhiteSpace(newVideojuego.Nombre))
+        {
+            await videojuegoService.AddVideojuegoAsync(newVideojuego);
+            await LoadVideojuegos(); // Actualizar la lista tras añadir
+            ToggleAddForm(); // Ocultar el formulario
+        }
+    }
+
+    private async Task EditVideojuego(int id)
+    {
+        editVideojuego = await videojuegoService.GetVideojuegoByIdAsync(id);
+        showEditForm = true;
+        StateHasChanged(); // Mostrar el formulario de edición
+    }
+
+    private async Task UpdateVideojuego()
+    {
+        if (!string.IsNullOrWhiteSpace(editVideojuego.Nombre))
+        {
+            await videojuegoService.UpdateVideojuegoAsync(editVideojuego);
+            await LoadVideojuegos(); // Actualizar la lista tras editar
+            ToggleEditForm(); // Ocultar el formulario
+        }
+    }
+
+    private async Task DeleteVideojuego(int id)
+    {
+        await videojuegoService.DeleteVideojuegoAsync(id);
+        await LoadVideojuegos(); // Actualizar la lista tras eliminar
+    }
+}
